@@ -1,28 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
-import 'player_screen.dart';
+import 'app_info.dart';
+import 'history/history_store.dart';
+import 'playback/playback_service.dart';
+import 'ui/player_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  runApp(const MediaPlayerApp());
+  final history = HistoryStore();
+  await history.load();
+  runApp(MediaPlayerApp(playback: PlaybackService(), history: history));
 }
 
 class MediaPlayerApp extends StatelessWidget {
-  const MediaPlayerApp({super.key});
+  const MediaPlayerApp({
+    super.key,
+    required this.playback,
+    required this.history,
+  });
+
+  final PlaybackService playback;
+  final HistoryStore history;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Media Player',
+      title: appName,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
           brightness: Brightness.dark,
         ),
       ),
-      home: const PlayerScreen(),
+      home: PlayerScreen(playback: playback, history: history),
     );
   }
 }

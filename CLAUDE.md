@@ -1,4 +1,4 @@
-# CLAUDE.md: Media Player (Flutter)
+# CLAUDE.md: Spectrum media player (Flutter)
 
 ## 0. Before any work
 Read [PLAN.md](PLAN.md): current stage and checkboxes.
@@ -22,7 +22,9 @@ Read [PLAN.md](PLAN.md): current stage and checkboxes.
 
 ## 4. Environment (checked 2026-11-06)
 - Flutter 3.47.9 via Homebrew (`/opt/homebrew/bin/flutter`), CocoaPods 1.17.0, Xcode 27.0.
-- Bundle id: `com.danielweissth.mediaPlayer`. iOS signing: free Personal Team (same as Tower Defense).
+- App name: **Spectrum** (`lib/app_info.dart`). Bundle id stays `com.danielweissth.mediaPlayer`, Dart package `media_player`.
+- App icon source: `assets/icon/app_icon.png`, regenerate with `dart run flutter_launcher_icons`.
+- iOS signing: free Personal Team (same as Tower Defense).
 - Android: cmdline-tools and licenses not set up yet (needed at stage 4).
 - Linux builds need a Linux machine (planned: UTM virtual machine, stage 4).
 - Run on Mac: `flutter run -d macos`. On iPhone: `flutter run -d <device>` (list: `flutter devices`).
