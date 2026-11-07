@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../playback/media_link.dart';
+import '../playback/media_source.dart';
 
-/// Text field for a network link with "add to queue" and "play" actions.
+/// Text field for a network link with "add to queue" and "play" actions, plus a button to open files.
 class LinkInput extends StatefulWidget {
-  const LinkInput({super.key, required this.onPlay, required this.onEnqueue});
+  const LinkInput({
+    super.key,
+    required this.onPlay,
+    required this.onEnqueue,
+    required this.onOpenFiles,
+  });
 
   final ValueChanged<String> onPlay;
   final ValueChanged<String> onEnqueue;
+  final VoidCallback onOpenFiles;
 
   @override
   State<LinkInput> createState() => _LinkInputState();
@@ -24,7 +30,7 @@ class _LinkInputState extends State<LinkInput> {
   }
 
   void _submit(ValueChanged<String> action) {
-    final uri = MediaLink.tryParse(_controller.text);
+    final uri = MediaSource.tryParseNetwork(_controller.text);
     if (uri == null) {
       setState(() => _errorText = 'Enter a full link, for example https://...');
       return;
@@ -40,6 +46,15 @@ class _LinkInputState extends State<LinkInput> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: IconButton.outlined(
+            tooltip: 'Open file',
+            icon: const Icon(Icons.folder_open),
+            onPressed: widget.onOpenFiles,
+          ),
+        ),
+        const SizedBox(width: 8),
         Expanded(
           child: TextField(
             controller: _controller,

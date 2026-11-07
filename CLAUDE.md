@@ -17,7 +17,15 @@ Read [PLAN.md](PLAN.md): current stage and checkboxes.
 - Platforms: **iOS, Android, Linux**. macOS build is only for quick testing on the Mac.
 - Stack: Flutter (Dart), `media_kit` for playback (libmpv), `audio_service` for background playback,
   lock screen and Dynamic Island (via iOS Now Playing).
-- Playback source: network links (http/https files, HLS streams).
+- Playback sources: network links (http/https files, HLS streams) and local files.
+  Stored as references (`lib/playback/media_source.dart`): URL, `library:<file name>`, or an absolute path (desktop).
+- Local files on phones are moved into the app library (`MediaLibrary`): iOS Documents, visible in Files as
+  "On My iPhone > Spectrum". Pickers only give temporary copies, so files are not played from the temp folder.
+  Library files are stored by name, not by full path: the iOS container path changes between installs.
+- Background: `SystemMediaHandler` (audio_service + audio_session). Video track is switched off in the background
+  (`vid=no`), sound continues. Picture-in-Picture is not done yet.
+- Debug: libmpv log goes to the console (`[mpv]`), Now Playing updates are logged as `[now playing]`.
+  Release builds on iOS do not show these; use `flutter run` with a cable to see them.
 - Player-visible text will be localized (English + Russian) at stage 5; until then text is in English.
 
 ## 4. Environment (checked 2026-11-06)

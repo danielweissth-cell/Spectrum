@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../history/history_store.dart';
-import '../playback/media_link.dart';
+import '../playback/media_source.dart';
+import 'list_parts.dart';
 
-/// Recently played links: tap to play, button to queue, swipe to forget.
+/// Recently played links and files: tap to play, button to queue, swipe to forget.
 class HistoryList extends StatelessWidget {
   const HistoryList({
     super.key,
@@ -43,11 +44,8 @@ class HistoryList extends StatelessWidget {
       builder: (context, _) {
         final urls = history.urls;
         if (urls.isEmpty) {
-          return Center(
-            child: Text(
-              'Links you play will appear here.',
-              style: TextStyle(color: Theme.of(context).hintColor),
-            ),
+          return const EmptyHint(
+            text: 'Links and files you play will appear here.',
           );
         }
         return ListView.builder(
@@ -66,21 +64,16 @@ class HistoryList extends StatelessWidget {
             return Dismissible(
               key: ValueKey(url),
               direction: DismissDirection.endToStart,
-              background: Container(
-                color: Theme.of(context).colorScheme.errorContainer,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: const Icon(Icons.delete),
-              ),
+              background: const DeleteBackground(),
               onDismissed: (_) => history.remove(url),
               child: ListTile(
                 title: Text(
-                  MediaLink.displayName(url),
+                  MediaSource.displayName(url),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  url,
+                  MediaSource.isNetwork(url) ? url : 'On this device',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
