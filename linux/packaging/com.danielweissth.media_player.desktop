@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Spectrum
+Comment=Play music and video from links and files
+Comment[ru]=Музыка и видео по ссылкам и из файлов
+Exec=@BUNDLE@/spectrum
+Icon=com.danielweissth.media_player
+Terminal=false
+Categories=AudioVideo;Audio;Video;Player;
+StartupWMClass=com.danielweissth.media_player

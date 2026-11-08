@@ -109,5 +109,10 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
   android: true
+  # Layered icon so Android launchers mask it themselves instead of shrinking it into a white circle.
+  # The foreground layer is opaque; the background colour only matters during launcher animations.
+  adaptive_icon_foreground: assets/icon/app_icon_android_adaptive.png
+  adaptive_icon_background: "#5A6EB1"
+  adaptive_icon_foreground_inset: 0
   macos:
     generate: true

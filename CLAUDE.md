@@ -33,6 +33,9 @@ Read [PLAN.md](PLAN.md): current stage and checkboxes.
 - App name: **Spectrum** (`lib/app_info.dart`). Bundle id stays `com.danielweissth.mediaPlayer`, Dart package `media_player`.
 - App icon source: `assets/icon/app_icon.png`, regenerate with `dart run flutter_launcher_icons`.
 - iOS signing: free Personal Team (same as Tower Defense).
-- Android: cmdline-tools and licenses not set up yet (needed at stage 4).
-- Linux builds need a Linux machine (planned: UTM virtual machine, stage 4).
+- Linux: Raspberry Pi 4, user `dan@192.168.50.120` (SSH key login, passwordless sudo). Flutter 3.47.9 in `~/development/flutter`,
+  project copy in `~/development/MediaPlayer` (sync with rsync, then `flutter build linux --release` on the Pi).
+  Run on the Pi screen over SSH: `XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0`. Menu entry: `linux/packaging/install_desktop_entry.sh`.
+- Android: Redmi (Android 12, MIUI). adb: `~/Library/Android/sdk/platform-tools/adb`. MIUI blocks `adb install` unless
+  "Install via USB" is on; fallback is `adb push` to Download and installing by hand.
 - Run on Mac: `flutter run -d macos`. On iPhone: `flutter run -d <device>` (list: `flutter devices`).
