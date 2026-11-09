@@ -31,10 +31,14 @@ class MediaPicker {
 
   final MediaLibrary library;
 
-  Future<MediaPickResult> pick(MediaPickSource source) async {
+  /// [dialogTitle] is shown by desktop file dialogs.
+  Future<MediaPickResult> pick(
+    MediaPickSource source, {
+    required String dialogTitle,
+  }) async {
     final fromPhotos = source == MediaPickSource.photos;
     final files = await FilePicker.pickFiles(
-      dialogTitle: 'Open media',
+      dialogTitle: dialogTitle,
       // Phone file browsers do not know types like MKV or Opus, so filtering happens below.
       type: fromPhotos
           ? FileType.video

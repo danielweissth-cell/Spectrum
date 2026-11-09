@@ -1,0 +1,91 @@
+{
+  "@@locale": "en",
+  "tabQueue": "Queue",
+  "tabLibrary": "Library",
+  "tabHistory": "History",
+  "linkFieldLabel": "Paste a link",
+  "linkInvalid": "Enter a full link, for example https://...",
+  "actionOpenFile": "Open file",
+  "actionAddToQueue": "Add to queue",
+  "actionPlay": "Play",
+  "actionCancel": "Cancel",
+  "actionDelete": "Delete",
+  "actionClear": "Clear",
+  "pickSourceFiles": "Files",
+  "pickSourceFilesHint": "Music and video from the Files app",
+  "pickSourcePhotos": "Photo library",
+  "pickSourcePhotosHint": "Videos from your gallery",
+  "pickDialogTitle": "Open media",
+  "addedToQueue": "Added to queue",
+  "onThisDevice": "On this device",
+  "fileMissing": "This file is no longer on the device.",
+  "notMediaFiles": "{count, plural, one{Not an audio or video file: {names}} other{Not audio or video files: {names}}}",
+  "@notMediaFiles": {
+    "description": "Shown when the user picked files that cannot be played. names is a comma-separated list of file names.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackFailedNamed": "Couldn't play {name}. Check the link and your internet connection.",
+  "@playbackFailedNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackFailed": "Couldn't play this item. Check the link and your internet connection.",
+  "queueEmpty": "The queue is empty.\nAdd a link or a file with the queue button.",
+  "historyEmpty": "Links and files you play will appear here.",
+  "historyClearTitle": "Clear history?",
+  "historyClearAction": "Clear history",
+  "libraryEmptyIos": "No files yet.\nOpen a file with the folder button, or copy files to On My iPhone > Spectrum in the Files app.",
+  "libraryEmpty": "No files yet.\nOpen a file with the folder button.",
+  "libraryDeleteTitle": "Delete file?",
+  "libraryDeleteMessage": "\"{fileName}\" will be removed from this device.",
+  "@libraryDeleteMessage": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationChannelName": "Playback",
+  "@notificationChannelName": {
+    "description": "Android notification channel shown in the system notification settings."
+  },
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageEnglish": "English",
+  "@settingsLanguageEnglish": {
+    "description": "Always written in English, so it can be found in any language."
+  },
+  "settingsLanguageRussian": "Русский",
+  "@settingsLanguageRussian": {
+    "description": "Always written in Russian, so it can be found in any language."
+  },
+  "settingsAppearance": "Appearance",
+  "settingsGlass": "Liquid Glass",
+  "settingsGlassHint": "Turn off to save battery",
+  "settingsSound": "Sound",
+  "settingsVolume": "Volume",
+  "settingsVolumeHint": "Above 2× the sound may distort",
+  "settingsSpeed": "Speed",
+  "settingsMultiplier": "{value}×",
+  "@settingsMultiplier": {
+    "description": "A volume or speed factor, for example 1.5×.",
+    "placeholders": {
+      "value": {
+        "type": "double",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsReset": "Reset"
+}

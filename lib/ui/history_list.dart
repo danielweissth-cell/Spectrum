@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../history/history_store.dart';
 import '../playback/media_source.dart';
 import 'list_parts.dart';
@@ -21,15 +22,15 @@ class HistoryList extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear history?'),
+        title: Text(AppLocalizations.of(context).historyClearTitle),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear'),
+            child: Text(AppLocalizations.of(context).actionClear),
           ),
         ],
       ),
@@ -44,9 +45,7 @@ class HistoryList extends StatelessWidget {
       builder: (context, _) {
         final urls = history.urls;
         if (urls.isEmpty) {
-          return const EmptyHint(
-            text: 'Links and files you play will appear here.',
-          );
+          return EmptyHint(text: AppLocalizations.of(context).historyEmpty);
         }
         return ListView.builder(
           itemCount: urls.length + 1,
@@ -55,7 +54,7 @@ class HistoryList extends StatelessWidget {
               return Center(
                 child: TextButton.icon(
                   icon: const Icon(Icons.delete_sweep),
-                  label: const Text('Clear history'),
+                  label: Text(AppLocalizations.of(context).historyClearAction),
                   onPressed: () => _confirmClear(context),
                 ),
               );
@@ -73,12 +72,14 @@ class HistoryList extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  MediaSource.isNetwork(url) ? url : 'On this device',
+                  MediaSource.isNetwork(url)
+                      ? url
+                      : AppLocalizations.of(context).onThisDevice,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 trailing: IconButton(
-                  tooltip: 'Add to queue',
+                  tooltip: AppLocalizations.of(context).actionAddToQueue,
                   icon: const Icon(Icons.playlist_add),
                   onPressed: () => onEnqueue(url),
                 ),

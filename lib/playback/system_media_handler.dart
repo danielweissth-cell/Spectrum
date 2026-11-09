@@ -23,6 +23,8 @@ class SystemMediaHandler extends BaseAudioHandler
       stream.playing.listen((_) => _publishState()),
       stream.buffering.listen((_) => _publishState()),
       stream.completed.listen((_) => _publishState()),
+      // The lock screen moves the progress bar by itself and needs the current speed for that.
+      stream.rate.listen((_) => _publishState()),
       stream.duration.listen((_) => _publishItem()),
       stream.playlist.listen((_) {
         _publishQueue();
@@ -49,6 +51,7 @@ class SystemMediaHandler extends BaseAudioHandler
   /// Creates the handler and registers it with the system.
   static Future<SystemMediaHandler> start({
     required PlaybackService playback,
+    required String notificationChannelName,
     Uri? fallbackArtwork,
   }) async {
     final session = await AudioSession.instance;
@@ -60,9 +63,9 @@ class SystemMediaHandler extends BaseAudioHandler
         session: session,
         fallbackArtwork: fallbackArtwork,
       ),
-      config: const AudioServiceConfig(
+      config: AudioServiceConfig(
         androidNotificationChannelId: 'com.danielweissth.mediaPlayer.playback',
-        androidNotificationChannelName: 'Playback',
+        androidNotificationChannelName: notificationChannelName,
         androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
       ),
@@ -75,14 +78,19 @@ class SystemMediaHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
+    _logCommand('play');
     if (await session.setActive(true)) await _player.play();
   }
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() {
+    _logCommand('pause');
+    return _player.pause();
+  }
 
   @override
   Future<void> stop() async {
+    _logCommand('stop');
     await _player.stop();
     await session.setActive(false);
     await super.stop();
@@ -90,15 +98,20 @@ class SystemMediaHandler extends BaseAudioHandler
 
   @override
   Future<void> seek(Duration position) async {
+    _logCommand('seek $position');
     await _player.seek(position);
     _publishState();
   }
 
   @override
-  Future<void> skipToNext() => _player.next();
+  Future<void> skipToNext() {
+    _logCommand('next');
+    return _player.next();
+  }
 
   @override
   Future<void> skipToPrevious() async {
+    _logCommand('previous');
     // Like most players: restart the track first, go to the previous one only near its start.
     if (_player.state.position > const Duration(seconds: 3)) {
       await seek(Duration.zero);
@@ -108,7 +121,15 @@ class SystemMediaHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> skipToQueueItem(int index) => _player.jump(index);
+  Future<void> skipToQueueItem(int index) {
+    _logCommand('jump $index');
+    return _player.jump(index);
+  }
+
+  /// Logged in release builds too (Android logcat tag "flutter"), to check that
+  /// lock screen, notification and headphone buttons reach the app.
+  static void _logCommand(String command) =>
+      debugPrint('[media command] $command');
 
   // State published to the system.
 

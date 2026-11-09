@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
+import '../l10n/app_localizations.dart';
 import '../playback/media_source.dart';
 import '../playback/playback_service.dart';
 import 'list_parts.dart';
@@ -20,12 +21,14 @@ class QueueList extends StatelessWidget {
       builder: (context, snapshot) {
         final playlist = snapshot.data ?? const Playlist([]);
         if (playlist.medias.isEmpty) {
-          return const EmptyHint(
-            text: 'The queue is empty.\nAdd a link or a file with the queue button.',
-          );
+          return EmptyHint(text: AppLocalizations.of(context).queueEmpty);
         }
         return ReorderableListView.builder(
           buildDefaultDragHandles: false,
+          // Keeps the last row reachable above the floating tab bar.
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.paddingOf(context).bottom,
+          ),
           itemCount: playlist.medias.length,
           onReorderItem: playback.move,
           itemBuilder: (context, index) {
@@ -49,7 +52,8 @@ class QueueList extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  MediaSource.host(reference) ?? 'On this device',
+                  MediaSource.host(reference) ??
+                      AppLocalizations.of(context).onThisDevice,
                   maxLines: 1,
                 ),
                 trailing: ReorderableDragStartListener(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../playback/media_source.dart';
 
-/// Text field for a network link with "add to queue" and "play" actions, plus a button to open files.
+/// Single-line bar with a link field, "open file", "add to queue" and "play" buttons.
+/// It has no background of its own: it sits inside a glass capsule.
 class LinkInput extends StatefulWidget {
   const LinkInput({
     super.key,
@@ -21,7 +23,6 @@ class LinkInput extends StatefulWidget {
 
 class _LinkInputState extends State<LinkInput> {
   final TextEditingController _controller = TextEditingController();
-  String? _errorText;
 
   @override
   void dispose() {
@@ -32,10 +33,14 @@ class _LinkInputState extends State<LinkInput> {
   void _submit(ValueChanged<String> action) {
     final uri = MediaSource.tryParseNetwork(_controller.text);
     if (uri == null) {
-      setState(() => _errorText = 'Enter a full link, for example https://...');
+      // A message under the field would stretch the capsule, so the hint pops up instead.
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).linkInvalid)),
+        );
       return;
     }
-    setState(() => _errorText = null);
     _controller.clear();
     FocusScope.of(context).unfocus();
     action(uri.toString());
@@ -43,51 +48,51 @@ class _LinkInputState extends State<LinkInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: IconButton.outlined(
-            tooltip: 'Open file',
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: l10n.actionOpenFile,
+            color: Colors.white,
             icon: const Icon(Icons.folder_open),
             onPressed: widget.onOpenFiles,
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: TextField(
-            controller: _controller,
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            textInputAction: TextInputAction.go,
-            decoration: InputDecoration(
-              labelText: 'Link to audio or video',
-              border: const OutlineInputBorder(),
-              errorText: _errorText,
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              textInputAction: TextInputAction.go,
+              style: const TextStyle(color: Colors.white),
+              cursorColor: Colors.white,
+              decoration: InputDecoration(
+                hintText: l10n.linkFieldLabel,
+                hintStyle: const TextStyle(color: Colors.white60),
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              onSubmitted: (_) => _submit(widget.onPlay),
             ),
-            onSubmitted: (_) => _submit(widget.onPlay),
           ),
-        ),
-        const SizedBox(width: 8),
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: IconButton.outlined(
-            tooltip: 'Add to queue',
+          IconButton(
+            tooltip: l10n.actionAddToQueue,
+            color: Colors.white,
             icon: const Icon(Icons.playlist_add),
             onPressed: () => _submit(widget.onEnqueue),
           ),
-        ),
-        const SizedBox(width: 8),
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: IconButton.filled(
-            tooltip: 'Play',
+          IconButton.filled(
+            tooltip: l10n.actionPlay,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF2B2F6B),
+            ),
             icon: const Icon(Icons.play_arrow),
             onPressed: () => _submit(widget.onPlay),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

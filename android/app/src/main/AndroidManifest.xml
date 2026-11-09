@@ -29,6 +29,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Liquid Glass (liquid_glass_renderer) needs Impeller and the Flutter GPU API. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="true" />
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableFlutterGPU"
+            android:value="true" />
         <!-- Background playback and media notification (audio_service). -->
         <service
             android:name="com.ryanheise.audioservice.AudioService"

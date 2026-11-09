@@ -29,6 +29,7 @@ class PlaybackService {
   }
 
   static const String _referenceKey = 'reference';
+  static const int _maxVolumePercent = 500;
 
   final Player player;
   final String Function(String reference) resolve;
@@ -101,6 +102,19 @@ class PlaybackService {
     final insertBefore = finalIndex > oldIndex ? finalIndex + 1 : finalIndex;
     return player.move(oldIndex, insertBefore);
   }
+
+  /// Sets the loudness as a gain: 1.0 plays the file as it is, 2.0 makes it twice as loud.
+  Future<void> setVolumeGain(double gain) async {
+    final platform = player.platform;
+    // libmpv stops at 130 % by default; the setting allows up to 500 %.
+    if (platform is NativePlayer) {
+      await platform.setProperty('volume-max', '$_maxVolumePercent');
+    }
+    await player.setVolume(gain * 100);
+  }
+
+  /// Playback speed; libmpv keeps the pitch of the sound unchanged.
+  Future<void> setSpeed(double speed) => player.setRate(speed);
 
   Future<void> dispose() async {
     _lifecycleListener.dispose();

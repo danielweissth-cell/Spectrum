@@ -6,11 +6,17 @@ import '../app_info.dart';
 import '../history/history_store.dart';
 import '../library/media_library.dart';
 import '../library/media_picker.dart';
+import '../l10n/app_localizations.dart';
+import '../playback/media_source.dart';
 import '../playback/playback_service.dart';
+import '../settings/app_settings.dart';
+import 'glass/glass.dart';
 import 'history_list.dart';
 import 'library_list.dart';
 import 'link_input.dart';
 import 'queue_list.dart';
+import 'settings_screen.dart';
+import 'spectrum_background.dart';
 import 'video_area.dart';
 
 /// Main screen: video on top (or on the left in landscape), link input and lists below.
@@ -20,11 +26,13 @@ class PlayerScreen extends StatefulWidget {
     required this.playback,
     required this.history,
     required this.library,
+    required this.settings,
   });
 
   final PlaybackService playback;
   final HistoryStore history;
   final MediaLibrary library;
+  final AppSettings settings;
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
@@ -38,7 +46,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   void initState() {
     super.initState();
     _errorSubscription = widget.playback.player.stream.error.listen(
-      _showMessage,
+      _showPlaybackError,
     );
   }
 
@@ -55,11 +63,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// libmpv reports technical English text such as "Failed to open" followed by the address;
+  /// the user gets a translated message with just the file or link name.
+  void _showPlaybackError(String message) {
+    debugPrint('[playback error] $message');
+    const prefix = 'Failed to open ';
+    final l10n = AppLocalizations.of(context);
+    _showMessage(
+      message.startsWith(prefix)
+          ? l10n.playbackFailedNamed(
+              MediaSource.displayName(message.substring(prefix.length).trim()),
+            )
+          : l10n.playbackFailed,
+    );
+  }
+
   /// A file played earlier may have been deleted since; forget it instead of failing in the player.
   bool _ensureAvailable(String reference) {
     if (widget.library.isAvailable(reference)) return true;
     widget.history.remove(reference);
-    _showMessage('This file is no longer on the device.');
+    _showMessage(AppLocalizations.of(context).fileMissing);
     return false;
   }
 
@@ -73,7 +96,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (!_ensureAvailable(reference)) return;
     widget.history.record(reference);
     widget.playback.enqueue(reference);
-    _showMessage('Added to queue');
+    _showMessage(AppLocalizations.of(context).addedToQueue);
   }
 
   Future<void> _delete(String reference) async {
@@ -83,14 +106,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _openFiles() async {
+    final dialogTitle = AppLocalizations.of(context).pickDialogTitle;
     final source = MediaLibrary.importsFiles
         ? await _chooseSource()
         : MediaPickSource.files;
     if (source == null) return;
-    final result = await _picker.pick(source);
+    final result = await _picker.pick(source, dialogTitle: dialogTitle);
+    if (!mounted) return;
     if (result.rejectedNames.isNotEmpty) {
       _showMessage(
-        'Not an audio or video file: ${result.rejectedNames.join(', ')}',
+        AppLocalizations.of(context).notMediaFiles(
+          result.rejectedNames.length,
+          result.rejectedNames.join(', '),
+        ),
       );
     }
     final references = result.references;
@@ -103,6 +131,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
     }
   }
 
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => SettingsScreen(settings: widget.settings),
+      ),
+    );
+  }
+
   Future<MediaPickSource?> _chooseSource() {
     return showModalBottomSheet<MediaPickSource>(
       context: context,
@@ -113,14 +149,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.folder_outlined),
-              title: const Text('Files'),
-              subtitle: const Text('Music and video from the Files app'),
+              title: Text(AppLocalizations.of(context).pickSourceFiles),
+              subtitle: Text(AppLocalizations.of(context).pickSourceFilesHint),
               onTap: () => Navigator.pop(context, MediaPickSource.files),
             ),
             ListTile(
               leading: const Icon(Icons.video_library_outlined),
-              title: const Text('Photo library'),
-              subtitle: const Text('Videos from your gallery'),
+              title: Text(AppLocalizations.of(context).pickSourcePhotos),
+              subtitle: Text(AppLocalizations.of(context).pickSourcePhotosHint),
               onTap: () => Navigator.pop(context, MediaPickSource.photos),
             ),
           ],
@@ -131,105 +167,337 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final video = VideoArea(playback: widget.playback);
-    final panel = _ControlPanel(
-      playback: widget.playback,
-      history: widget.history,
-      library: widget.library,
-      onPlay: _play,
-      onEnqueue: _enqueue,
-      onDelete: _delete,
-      onOpenFiles: _openFiles,
+    final showLibrary = MediaLibrary.importsFiles;
+    final lists = TabBarView(
+      children: [
+        QueueList(playback: widget.playback),
+        if (showLibrary)
+          LibraryList(
+            library: widget.library,
+            onPlay: _play,
+            onEnqueue: _enqueue,
+            onDelete: _delete,
+          ),
+        HistoryList(
+          history: widget.history,
+          onPlay: _play,
+          onEnqueue: _enqueue,
+        ),
+      ],
     );
-    return Scaffold(
-      appBar: AppBar(title: const Text(appName)),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isLandscape = constraints.maxWidth > constraints.maxHeight;
-            if (isLandscape) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(flex: 3, child: video),
-                  Expanded(flex: 2, child: panel),
-                ],
-              );
-            }
-            return Column(
-              children: [
-                AspectRatio(aspectRatio: 16 / 9, child: video),
-                Expanded(child: panel),
-              ],
-            );
-          },
+    // The tab bar would sit on top of the keyboard otherwise.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return DefaultTabController(
+      length: showLibrary ? 3 : 2,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            const Positioned.fill(child: SpectrumBackground()),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final slots = _ScreenSlots.compute(constraints.biggest);
+                  return Stack(
+                    children: [
+                      if (slots.title != null)
+                        Positioned.fromRect(
+                          rect: slots.title!,
+                          child: const _Title(),
+                        ),
+                      Positioned.fromRect(
+                        rect: slots.video,
+                        child: _VideoCard(playback: widget.playback),
+                      ),
+                      Positioned.fromRect(
+                        rect: slots.lists,
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeTop: true,
+                          child: ListTileTheme(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                            ),
+                            child: _BottomInset(
+                              inset: keyboardOpen
+                                  ? 0
+                                  : _ScreenSlots.tabBarHeight +
+                                        _ScreenSlots.gap * 2,
+                              child: lists,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Painted last, so the glass refracts the video and the list below it.
+                      Positioned.fill(
+                        child: GlassLayer(
+                          child: Stack(
+                            children: [
+                              Positioned.fromRect(
+                                rect: slots.linkBar,
+                                child: GlassPanel(
+                                  radius: _ScreenSlots.linkBarHeight / 2,
+                                  child: LinkInput(
+                                    onPlay: _play,
+                                    onEnqueue: _enqueue,
+                                    onOpenFiles: _openFiles,
+                                  ),
+                                ),
+                              ),
+                              if (!keyboardOpen)
+                                Positioned.fromRect(
+                                  rect: slots.tabBar,
+                                  child: _GlassTabBar(showLibrary: showLibrary),
+                                ),
+                              if (!keyboardOpen || slots.title != null)
+                                Positioned.fromRect(
+                                  rect: slots.settingsButton,
+                                  child: _SettingsButton(
+                                    onPressed: _openSettings,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ControlPanel extends StatelessWidget {
-  const _ControlPanel({
-    required this.playback,
-    required this.history,
-    required this.library,
-    required this.onPlay,
-    required this.onEnqueue,
-    required this.onDelete,
-    required this.onOpenFiles,
+/// Where each part of the screen goes. The content and the glass layer above it are
+/// laid out from the same rectangles, so the glass sits exactly over its place.
+class _ScreenSlots {
+  const _ScreenSlots({
+    required this.title,
+    required this.video,
+    required this.linkBar,
+    required this.lists,
+    required this.tabBar,
+    required this.settingsButton,
   });
 
-  final PlaybackService playback;
-  final HistoryStore history;
-  final MediaLibrary library;
-  final ValueChanged<String> onPlay;
-  final ValueChanged<String> onEnqueue;
-  final ValueChanged<String> onDelete;
-  final VoidCallback onOpenFiles;
+  static const double margin = 16;
+  static const double gap = 12;
+  static const double titleHeight = 52;
+  static const double linkBarHeight = 60;
+  static const double tabBarHeight = 60;
+  static const double tabBarMaxWidth = 380;
+  static const double settingsButtonSize = 44;
+
+  /// Null in landscape, where the screen is too short for a title.
+  final Rect? title;
+  final Rect video;
+  final Rect linkBar;
+  final Rect lists;
+  final Rect tabBar;
+
+  /// In the title row in portrait; next to the tab bar in landscape, where there is no title.
+  final Rect settingsButton;
+
+  factory _ScreenSlots.compute(Size size) {
+    final isLandscape = size.width > size.height;
+    if (isLandscape) {
+      final panelLeft = size.width * 3 / 5;
+      final panelWidth = size.width - panelLeft - margin;
+      final settingsButton = Rect.fromLTWH(
+        size.width - margin - tabBarHeight,
+        size.height - gap - tabBarHeight,
+        tabBarHeight,
+        tabBarHeight,
+      );
+      final linkBar = Rect.fromLTWH(
+        panelLeft,
+        margin,
+        panelWidth,
+        linkBarHeight,
+      );
+      return _ScreenSlots(
+        title: null,
+        video: Rect.fromLTRB(
+          margin,
+          margin,
+          panelLeft - gap,
+          size.height - margin,
+        ),
+        linkBar: linkBar,
+        lists: Rect.fromLTRB(
+          panelLeft - margin,
+          linkBar.bottom + gap / 2,
+          size.width,
+          size.height,
+        ),
+        tabBar: _tabBar(
+          left: panelLeft,
+          width: panelWidth - tabBarHeight - gap,
+          bottom: size.height,
+        ),
+        settingsButton: settingsButton,
+      );
+    }
+    final contentWidth = size.width - margin * 2;
+    final video = Rect.fromLTWH(
+      margin,
+      titleHeight,
+      contentWidth,
+      contentWidth * 9 / 16,
+    );
+    final linkBar = Rect.fromLTWH(
+      margin,
+      video.bottom + gap,
+      contentWidth,
+      linkBarHeight,
+    );
+    return _ScreenSlots(
+      title: Rect.fromLTWH(margin, 0, contentWidth, titleHeight),
+      video: video,
+      linkBar: linkBar,
+      lists: Rect.fromLTRB(
+        0,
+        linkBar.bottom + gap / 2,
+        size.width,
+        size.height,
+      ),
+      tabBar: _tabBar(left: margin, width: contentWidth, bottom: size.height),
+      settingsButton: Rect.fromLTWH(
+        size.width - margin - settingsButtonSize,
+        (titleHeight - settingsButtonSize) / 2,
+        settingsButtonSize,
+        settingsButtonSize,
+      ),
+    );
+  }
+
+  static Rect _tabBar({
+    required double left,
+    required double width,
+    required double bottom,
+  }) {
+    final barWidth = width < tabBarMaxWidth ? width : tabBarMaxWidth;
+    return Rect.fromLTWH(
+      left + (width - barWidth) / 2,
+      bottom - gap - tabBarHeight,
+      barWidth,
+      tabBarHeight,
+    );
+  }
+}
+
+/// Lets list rows scroll under the floating tab bar while the last row can still scroll above it.
+class _BottomInset extends StatelessWidget {
+  const _BottomInset({required this.inset, required this.child});
+
+  final double inset;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final showLibrary = MediaLibrary.importsFiles;
-    return DefaultTabController(
-      length: showLibrary ? 3 : 2,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: LinkInput(
-              onPlay: onPlay,
-              onEnqueue: onEnqueue,
-              onOpenFiles: onOpenFiles,
+    final mediaQuery = MediaQuery.of(context);
+    return MediaQuery(
+      data: mediaQuery.copyWith(
+        padding: mediaQuery.padding.copyWith(bottom: inset),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _Title extends StatelessWidget {
+  const _Title();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        appName,
+        style: Theme.of(context).textTheme.headlineSmall
+            ?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _VideoCard extends StatelessWidget {
+  const _VideoCard({required this.playback});
+
+  final PlaybackService playback;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRSuperellipse(
+      borderRadius: BorderRadius.circular(24),
+      child: VideoArea(playback: playback),
+    );
+  }
+}
+
+/// Floating Liquid Glass capsule with the Queue / Library / History tabs.
+class _GlassTabBar extends StatelessWidget {
+  const _GlassTabBar({required this.showLibrary});
+
+  final bool showLibrary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return GlassPanel(
+      radius: _ScreenSlots.tabBarHeight / 2,
+      floating: true,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: TabBar(
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicator: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(
+              (_ScreenSlots.tabBarHeight - 12) / 2,
             ),
           ),
-          TabBar(
-            tabs: [
-              const Tab(text: 'Queue'),
-              if (showLibrary) const Tab(text: 'Library'),
-              const Tab(text: 'History'),
-            ],
+          splashBorderRadius: BorderRadius.circular(
+            (_ScreenSlots.tabBarHeight - 12) / 2,
           ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                QueueList(playback: playback),
-                if (showLibrary)
-                  LibraryList(
-                    library: library,
-                    onPlay: onPlay,
-                    onEnqueue: onEnqueue,
-                    onDelete: onDelete,
-                  ),
-                HistoryList(
-                  history: history,
-                  onPlay: onPlay,
-                  onEnqueue: onEnqueue,
-                ),
-              ],
-            ),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          tabs: [
+            Tab(text: l10n.tabQueue),
+            if (showLibrary) Tab(text: l10n.tabLibrary),
+            Tab(text: l10n.tabHistory),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Round glass button that opens the settings.
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => GlassPanel(
+        radius: constraints.maxHeight / 2,
+        child: Center(
+          child: IconButton(
+            tooltip: AppLocalizations.of(context).settingsTitle,
+            color: Colors.white,
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: onPressed,
           ),
-        ],
+        ),
       ),
     );
   }

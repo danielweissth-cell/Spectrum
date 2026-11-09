@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../library/media_library.dart';
 import '../playback/media_source.dart';
 import 'list_parts.dart';
@@ -43,16 +46,18 @@ class _LibraryListState extends State<LibraryList> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete file?'),
-        content: Text('"$fileName" will be removed from this device.'),
+        title: Text(AppLocalizations.of(context).libraryDeleteTitle),
+        content: Text(
+          AppLocalizations.of(context).libraryDeleteMessage(fileName),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context).actionDelete),
           ),
         ],
       ),
@@ -69,11 +74,12 @@ class _LibraryListState extends State<LibraryList> {
         return RefreshIndicator(
           onRefresh: widget.library.refresh,
           child: fileNames.isEmpty
-              ? const EmptyHint(
+              ? EmptyHint(
                   scrollable: true,
-                  text:
-                      'No files yet.\nOpen a file with the folder button, or copy files '
-                      'to On My iPhone > Spectrum in the Files app.',
+                  // Only iOS shows the app folder in a system file manager.
+                  text: Platform.isIOS
+                      ? AppLocalizations.of(context).libraryEmptyIos
+                      : AppLocalizations.of(context).libraryEmpty,
                 )
               : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -99,7 +105,8 @@ class _LibraryListState extends State<LibraryList> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         trailing: IconButton(
-                          tooltip: 'Add to queue',
+                          tooltip: AppLocalizations.of(context)
+                              .actionAddToQueue,
                           icon: const Icon(Icons.playlist_add),
                           onPressed: () => widget.onEnqueue(reference),
                         ),
