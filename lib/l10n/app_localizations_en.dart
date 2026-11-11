@@ -165,4 +165,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsReset => 'Reset';
+
+  @override
+  String get styleRainbow => 'Rainbow';
+
+  @override
+  String get style64Bit => '64 Bit';
+
+  @override
+  String get styleDark => 'Dark';
+
+  @override
+  String get styleWhite => 'White';
 }

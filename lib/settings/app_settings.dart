@@ -13,6 +13,9 @@ enum AppLanguage {
   final Locale? locale;
 }
 
+/// Look of the whole app: colours, background, font and corners.
+enum AppStyle { rainbow, bit64, dark, white }
+
 /// User preferences, persisted between launches.
 class AppSettings extends ChangeNotifier {
   /// Volume gain: 1.0 is the file's own loudness, values above it amplify.
@@ -24,8 +27,11 @@ class AppSettings extends ChangeNotifier {
   static const double maxSpeed = 5.0;
   static const double defaultSpeed = 1.0;
 
+  static const AppStyle defaultStyle = AppStyle.dark;
+
   static const String _languageKey = 'settings.language';
   static const String _glassKey = 'settings.glass';
+  static const String _styleKey = 'settings.style';
   static const String _volumeKey = 'settings.volume';
   static const String _speedKey = 'settings.speed';
 
@@ -33,11 +39,13 @@ class AppSettings extends ChangeNotifier {
 
   AppLanguage _language = AppLanguage.system;
   bool _glassEnabled = true;
+  AppStyle _style = defaultStyle;
   double _volume = defaultVolume;
   double _speed = defaultSpeed;
 
   AppLanguage get language => _language;
   bool get glassEnabled => _glassEnabled;
+  AppStyle get style => _style;
   double get volume => _volume;
   double get speed => _speed;
 
@@ -47,6 +55,7 @@ class AppSettings extends ChangeNotifier {
       _preferences.getBool(_glassKey),
       _preferences.getDouble(_volumeKey),
       _preferences.getDouble(_speedKey),
+      _preferences.getString(_styleKey),
     ]);
     _language = AppLanguage.values.firstWhere(
       (language) => language.name == values[0],
@@ -55,6 +64,10 @@ class AppSettings extends ChangeNotifier {
     _glassEnabled = values[1] as bool? ?? true;
     _volume = _clamp(values[2] as double?, minVolume, maxVolume, defaultVolume);
     _speed = _clamp(values[3] as double?, minSpeed, maxSpeed, defaultSpeed);
+    _style = AppStyle.values.firstWhere(
+      (style) => style.name == values[4],
+      orElse: () => defaultStyle,
+    );
     notifyListeners();
   }
 
@@ -70,6 +83,13 @@ class AppSettings extends ChangeNotifier {
     _glassEnabled = enabled;
     notifyListeners();
     return _preferences.setBool(_glassKey, enabled);
+  }
+
+  Future<void> setStyle(AppStyle style) {
+    if (style == _style) return Future.value();
+    _style = style;
+    notifyListeners();
+    return _preferences.setString(_styleKey, style.name);
   }
 
   Future<void> setVolume(double volume) {

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -18,9 +19,11 @@ import 'playback/system_media_handler.dart';
 import 'settings/app_settings.dart';
 import 'ui/glass/glass.dart';
 import 'ui/player_screen.dart';
+import 'ui/style/style_look.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(_fontLicenses);
   MediaKit.ensureInitialized();
   // Not awaited: startup should not wait for shaders; the first frame or two use plain blur.
   unawaited(precacheGlass());
@@ -64,6 +67,12 @@ Future<void> _applySoundSettings(
   if (player.state.rate != settings.speed) {
     await playback.setSpeed(settings.speed);
   }
+}
+
+/// The OFL asks for its text to ship with the font.
+Stream<LicenseEntry> _fontLicenses() async* {
+  final text = await rootBundle.loadString('assets/fonts/PressStart2P-OFL.txt');
+  yield LicenseEntryWithLineBreaks(['Press Start 2P'], text);
 }
 
 /// The system language if the app is translated into it, English otherwise.
@@ -118,14 +127,14 @@ class MediaPlayerApp extends StatelessWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       // Above the navigator, so the settings screen and dialogs see it too.
-      builder: (context, child) =>
-          GlassScope(enabled: settings.glassEnabled, child: child!),
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5A6EB1),
-          brightness: Brightness.dark,
-        ),
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        // Status bar icons must stay readable on the light style.
+        value: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
+        child: GlassScope(enabled: settings.glassEnabled, child: child!),
       ),
+      theme: StyleLook.themeFor(settings.style),
       home: PlayerScreen(
         playback: playback,
         history: history,

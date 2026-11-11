@@ -168,4 +168,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsReset => 'Сбросить';
+
+  @override
+  String get styleRainbow => 'Радуга';
+
+  @override
+  String get style64Bit => '64 бит';
+
+  @override
+  String get styleDark => 'Тёмный';
+
+  @override
+  String get styleWhite => 'Светлый';
 }

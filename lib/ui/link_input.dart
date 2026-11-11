@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../playback/media_source.dart';
+import 'style/style_look.dart';
 
 /// Single-line bar with a link field, "open file", "add to queue" and "play" buttons.
 /// It has no background of its own: it sits inside a glass capsule.
@@ -49,13 +50,14 @@ class _LinkInputState extends State<LinkInput> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final look = StyleLook.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Row(
         children: [
           IconButton(
             tooltip: l10n.actionOpenFile,
-            color: Colors.white,
+            color: look.foreground,
             icon: const Icon(Icons.folder_open),
             onPressed: widget.onOpenFiles,
           ),
@@ -65,11 +67,11 @@ class _LinkInputState extends State<LinkInput> {
               keyboardType: TextInputType.url,
               autocorrect: false,
               textInputAction: TextInputAction.go,
-              style: const TextStyle(color: Colors.white),
-              cursorColor: Colors.white,
+              style: TextStyle(color: look.foreground),
+              cursorColor: look.foreground,
               decoration: InputDecoration(
                 hintText: l10n.linkFieldLabel,
-                hintStyle: const TextStyle(color: Colors.white60),
+                hintStyle: TextStyle(color: look.foregroundMuted),
                 border: InputBorder.none,
                 isDense: true,
               ),
@@ -78,15 +80,18 @@ class _LinkInputState extends State<LinkInput> {
           ),
           IconButton(
             tooltip: l10n.actionAddToQueue,
-            color: Colors.white,
+            color: look.foreground,
             icon: const Icon(Icons.playlist_add),
             onPressed: () => _submit(widget.onEnqueue),
           ),
           IconButton.filled(
             tooltip: l10n.actionPlay,
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF2B2F6B),
+              backgroundColor: look.accent,
+              foregroundColor: look.onAccent,
+              shape: RoundedSuperellipseBorder(
+                borderRadius: BorderRadius.circular(look.radius(24)),
+              ),
             ),
             icon: const Icon(Icons.play_arrow),
             onPressed: () => _submit(widget.onPlay),

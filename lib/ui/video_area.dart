@@ -5,7 +5,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../playback/media_source.dart';
 import '../playback/playback_service.dart';
 import 'glass/glass.dart';
-import 'spectrum_background.dart';
+import 'style/style_background.dart';
+import 'style/style_look.dart';
 
 /// Video surface with Liquid Glass playback controls. For audio-only media it shows a placeholder.
 class VideoArea extends StatelessWidget {
@@ -13,72 +14,82 @@ class VideoArea extends StatelessWidget {
 
   final PlaybackService playback;
 
-  static const Color _accent = Color(0xFF9DB4FF);
+  static const Color _seekColor = Color(0xFF9DB4FF);
 
-  static const _mobileControls = MaterialVideoControlsThemeData(
-    seekOnDoubleTap: true,
-    // Light dimming: the glass needs the picture behind it to stay visible.
-    backdropColor: Color(0x26000000),
-    seekBarPositionColor: _accent,
-    seekBarThumbColor: Colors.white,
-    primaryButtonBar: [
-      Spacer(),
-      GlassPanel(
-        standalone: true,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              MaterialSkipPreviousButton(),
-              MaterialPlayOrPauseButton(iconSize: 40),
-              MaterialSkipNextButton(),
-            ],
-          ),
-        ),
-      ),
-      Spacer(),
-    ],
-    bottomButtonBarMargin: EdgeInsets.fromLTRB(8, 0, 8, 6),
-    bottomButtonBar: [
-      Expanded(
-        child: GlassPanel(
-          standalone: true,
-          radius: 22,
-          child: Padding(
-            padding: EdgeInsets.only(left: 14, right: 2),
-            child: Row(
-              children: [
-                MaterialPositionIndicator(),
-                Spacer(),
-                MaterialFullscreenButton(),
-              ],
+  /// Buttons sit on glass panels, so they take the panel text colour of the style.
+  static MaterialVideoControlsThemeData _mobileControls(StyleLook look) =>
+      MaterialVideoControlsThemeData(
+        seekOnDoubleTap: true,
+        // Light dimming: the glass needs the picture behind it to stay visible.
+        backdropColor: const Color(0x26000000),
+        seekBarPositionColor: _seekColor,
+        seekBarThumbColor: Colors.white,
+        buttonBarButtonColor: look.foreground,
+        primaryButtonBar: [
+          const Spacer(),
+          const GlassPanel(
+            standalone: true,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MaterialSkipPreviousButton(),
+                  MaterialPlayOrPauseButton(iconSize: 40),
+                  MaterialSkipNextButton(),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-    ],
-  );
+          const Spacer(),
+        ],
+        bottomButtonBarMargin: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+        bottomButtonBar: [
+          Expanded(
+            child: GlassPanel(
+              standalone: true,
+              radius: 22,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 14, right: 2),
+                child: Row(
+                  children: [
+                    MaterialPositionIndicator(
+                      style: TextStyle(color: look.foreground, fontSize: 14),
+                    ),
+                    const Spacer(),
+                    const MaterialFullscreenButton(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
 
-  static const _desktopControls = MaterialDesktopVideoControlsThemeData(
-    seekBarPositionColor: _accent,
+  static MaterialDesktopVideoControlsThemeData _desktopControls(
+    StyleLook look,
+  ) => MaterialDesktopVideoControlsThemeData(
+    seekBarPositionColor: _seekColor,
     seekBarThumbColor: Colors.white,
-    bottomButtonBarMargin: EdgeInsets.fromLTRB(8, 0, 8, 8),
+    buttonBarButtonColor: look.foreground,
+    bottomButtonBarMargin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
     bottomButtonBar: [
       Expanded(
         child: GlassPanel(
           standalone: true,
           radius: 24,
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Row(
               children: [
-                MaterialDesktopSkipPreviousButton(),
-                MaterialDesktopPlayOrPauseButton(),
-                MaterialDesktopSkipNextButton(),
-                MaterialDesktopPositionIndicator(),
-                Spacer(),
-                MaterialDesktopFullscreenButton(),
+                const MaterialDesktopSkipPreviousButton(),
+                const MaterialDesktopPlayOrPauseButton(),
+                const MaterialDesktopSkipNextButton(),
+                MaterialDesktopPositionIndicator(
+                  style: TextStyle(color: look.foreground, fontSize: 14),
+                ),
+                const Spacer(),
+                const MaterialDesktopFullscreenButton(),
               ],
             ),
           ),
@@ -89,12 +100,15 @@ class VideoArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final look = StyleLook.of(context);
+    final mobileControls = _mobileControls(look);
+    final desktopControls = _desktopControls(look);
     return MaterialVideoControlsTheme(
-      normal: _mobileControls,
-      fullscreen: _mobileControls,
+      normal: mobileControls,
+      fullscreen: mobileControls,
       child: MaterialDesktopVideoControlsTheme(
-        normal: _desktopControls,
-        fullscreen: _desktopControls,
+        normal: desktopControls,
+        fullscreen: desktopControls,
         child: Video(
           controller: playback.videoController,
           // Sound keeps playing in the background; PlaybackService turns the picture off there.
@@ -149,17 +163,18 @@ class _AudioPlaceholder extends StatelessWidget {
               final title = reference == null
                   ? null
                   : streamTitle ?? MediaSource.displayName(reference);
+              final look = StyleLook.of(context);
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  const SpectrumBackground(),
+                  const StyleBackground(),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         title == null ? Icons.link : Icons.music_note,
                         size: 64,
-                        color: Colors.white54,
+                        color: look.foregroundMuted,
                       ),
                       if (title != null)
                         Padding(
@@ -169,8 +184,8 @@ class _AudioPlaceholder extends StatelessWidget {
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: look.foreground,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

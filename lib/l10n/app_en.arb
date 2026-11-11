@@ -87,5 +87,12 @@
       }
     }
   },
-  "settingsReset": "Reset"
+  "settingsReset": "Reset",
+  "styleRainbow": "Rainbow",
+  "style64Bit": "64 Bit",
+  "@style64Bit": {
+    "description": "Pixel retro style, like old game consoles."
+  },
+  "styleDark": "Dark",
+  "styleWhite": "White"
 }

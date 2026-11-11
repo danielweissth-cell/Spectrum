@@ -26,5 +26,7 @@
   - [x] Step 1: language (system / English / Russian), Liquid Glass on/off, volume gain 0.5–5.0×, speed 0.5–5.0×.
         Checked on iPhone and Pi. Glass off = solid plates. Lock screen / Dynamic Island are drawn by iOS
         and do not follow the switch.
-  - [ ] Step 2: styles Rainbow (current), 64 Bit (pixel retro, pixel font with Cyrillic, square corners), Dark, White.
+  - [x] Step 2: styles (default Dark) Rainbow, 64 Bit (pixel sunset, Press Start 2P font with Cyrillic, square corners,
+        thick frames), Dark, White. Built, checked in the simulator, installed on iPhone. Waiting for the user's check.
+  - [x] Pi and Redmi updated with settings and styles.
 - [ ] Later: Picture-in-Picture for video on iOS.

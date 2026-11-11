@@ -79,6 +79,13 @@ flutter:
   assets:
     # Also used as Now Playing artwork when the media has no cover.
     - assets/icon/app_icon.png
+    - assets/fonts/PressStart2P-OFL.txt
+
+  # Pixel font of the "64 Bit" style; it covers Latin and Cyrillic.
+  fonts:
+    - family: PressStart2P
+      fonts:
+        - asset: assets/fonts/PressStart2P-Regular.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

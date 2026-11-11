@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
-import 'spectrum_background.dart';
+import 'style/style_background.dart';
+import 'style/style_look.dart';
 
 /// Language, look and sound preferences. Every change applies at once and is saved.
 class SettingsScreen extends StatelessWidget {
@@ -23,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          const Positioned.fill(child: SpectrumBackground()),
+          const Positioned.fill(child: StyleBackground()),
           ListenableBuilder(
             listenable: settings,
             builder: (context, _) => ListView(
@@ -40,11 +41,16 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 _Section(
                   title: l10n.settingsAppearance,
-                  child: SwitchListTile(
-                    title: Text(l10n.settingsGlass),
-                    subtitle: Text(l10n.settingsGlassHint),
-                    value: settings.glassEnabled,
-                    onChanged: settings.setGlassEnabled,
+                  child: Column(
+                    children: [
+                      _StylePicker(settings: settings),
+                      SwitchListTile(
+                        title: Text(l10n.settingsGlass),
+                        subtitle: Text(l10n.settingsGlassHint),
+                        value: settings.glassEnabled,
+                        onChanged: settings.setGlassEnabled,
+                      ),
+                    ],
                   ),
                 ),
                 _Section(
@@ -94,6 +100,10 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final look = StyleLook.of(context);
+    // A busy pixel background shows through a translucent card, so that style gets a
+    // solid one with the same thick frame as its panels.
+    final isPixel = look.panelBorderWidth > 1;
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -104,20 +114,130 @@ class _Section extends StatelessWidget {
             child: Text(
               title,
               style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: look.foreground,
               ),
             ),
           ),
           Card(
             margin: EdgeInsets.zero,
-            color: theme.colorScheme.surface.withValues(alpha: 0.55),
+            color: isPixel
+                ? look.solidPanel
+                : theme.colorScheme.surface.withValues(alpha: 0.55),
             clipBehavior: Clip.antiAlias,
             shape: RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(look.radius(20)),
+              side: isPixel
+                  ? BorderSide(
+                      color: look.panelBorder,
+                      width: look.panelBorderWidth,
+                    )
+                  : BorderSide.none,
             ),
             child: child,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Four tiles, each showing a small piece of that style's background.
+class _StylePicker extends StatelessWidget {
+  const _StylePicker({required this.settings});
+
+  final AppSettings settings;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    String nameOf(AppStyle style) => switch (style) {
+      AppStyle.rainbow => l10n.styleRainbow,
+      AppStyle.bit64 => l10n.style64Bit,
+      AppStyle.dark => l10n.styleDark,
+      AppStyle.white => l10n.styleWhite,
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final style in AppStyle.values)
+            Expanded(
+              child: _StyleTile(
+                style: style,
+                name: nameOf(style),
+                selected: settings.style == style,
+                onTap: () => settings.setStyle(style),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StyleTile extends StatelessWidget {
+  const _StyleTile({
+    required this.style,
+    required this.name,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppStyle style;
+  final String name;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(StyleLook.of(context).radius(14));
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: name,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Column(
+            children: [
+              AspectRatio(
+                aspectRatio: 0.75,
+                child: DecoratedBox(
+                  position: DecorationPosition.foreground,
+                  decoration: ShapeDecoration(
+                    shape: RoundedSuperellipseBorder(
+                      borderRadius: radius,
+                      side: BorderSide(
+                        color: selected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant,
+                        width: selected ? 3 : 1,
+                      ),
+                    ),
+                  ),
+                  child: ClipRSuperellipse(
+                    borderRadius: radius,
+                    child: StyleBackground(style: style),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : null,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

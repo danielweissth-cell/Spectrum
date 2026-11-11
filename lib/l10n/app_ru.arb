@@ -44,5 +44,9 @@
   "settingsVolumeHint": "Выше 2× звук может хрипеть",
   "settingsSpeed": "Скорость",
   "settingsMultiplier": "{value}×",
-  "settingsReset": "Сбросить"
+  "settingsReset": "Сбросить",
+  "styleRainbow": "Радуга",
+  "style64Bit": "64 бит",
+  "styleDark": "Тёмный",
+  "styleWhite": "Светлый"
 }

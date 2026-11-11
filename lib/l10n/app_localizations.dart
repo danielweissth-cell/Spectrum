@@ -367,6 +367,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset'**
   String get settingsReset;
+
+  /// No description provided for @styleRainbow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rainbow'**
+  String get styleRainbow;
+
+  /// Pixel retro style, like old game consoles.
+  ///
+  /// In en, this message translates to:
+  /// **'64 Bit'**
+  String get style64Bit;
+
+  /// No description provided for @styleDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get styleDark;
+
+  /// No description provided for @styleWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get styleWhite;
 }
 
 class _AppLocalizationsDelegate

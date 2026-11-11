@@ -16,7 +16,8 @@ import 'library_list.dart';
 import 'link_input.dart';
 import 'queue_list.dart';
 import 'settings_screen.dart';
-import 'spectrum_background.dart';
+import 'style/style_background.dart';
+import 'style/style_look.dart';
 import 'video_area.dart';
 
 /// Main screen: video on top (or on the left in landscape), link input and lists below.
@@ -193,7 +194,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            const Positioned.fill(child: SpectrumBackground()),
+            const Positioned.fill(child: StyleBackground()),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -418,8 +419,10 @@ class _Title extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         appName,
-        style: Theme.of(context).textTheme.headlineSmall
-            ?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: StyleLook.of(context).foreground,
+        ),
       ),
     );
   }
@@ -433,7 +436,7 @@ class _VideoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRSuperellipse(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(StyleLook.of(context).radius(24)),
       child: VideoArea(playback: playback),
     );
   }
@@ -448,6 +451,10 @@ class _GlassTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final look = StyleLook.of(context);
+    final indicatorRadius = BorderRadius.circular(
+      look.radius((_ScreenSlots.tabBarHeight - 12) / 2),
+    );
     return GlassPanel(
       radius: _ScreenSlots.tabBarHeight / 2,
       floating: true,
@@ -457,16 +464,12 @@ class _GlassTabBar extends StatelessWidget {
           dividerColor: Colors.transparent,
           indicatorSize: TabBarIndicatorSize.tab,
           indicator: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(
-              (_ScreenSlots.tabBarHeight - 12) / 2,
-            ),
+            color: look.selection,
+            borderRadius: indicatorRadius,
           ),
-          splashBorderRadius: BorderRadius.circular(
-            (_ScreenSlots.tabBarHeight - 12) / 2,
-          ),
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          splashBorderRadius: indicatorRadius,
+          labelColor: look.foreground,
+          unselectedLabelColor: look.foregroundMuted,
           labelStyle: const TextStyle(fontWeight: FontWeight.w600),
           tabs: [
             Tab(text: l10n.tabQueue),
@@ -493,7 +496,7 @@ class _SettingsButton extends StatelessWidget {
         child: Center(
           child: IconButton(
             tooltip: AppLocalizations.of(context).settingsTitle,
-            color: Colors.white,
+            color: StyleLook.of(context).foreground,
             icon: const Icon(Icons.settings_outlined),
             onPressed: onPressed,
           ),
