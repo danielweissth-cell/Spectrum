@@ -11,6 +11,8 @@ Read [PLAN.md](PLAN.md): current stage and checkboxes.
 ## 2. Workflow
 - Plan first, then code. Small steps: one step -> user checks -> commit -> next.
 - Commit only when the user agrees. Commit messages in English, imperative mood.
+- GitHub: public repo https://github.com/danielweissth-cell/Spectrum (`origin`, branch `main`). Push after each
+  agreed commit. The repo is public: never commit keys, passwords or signing files.
 - Do not do more than asked.
 
 ## 3. Architecture
