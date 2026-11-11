@@ -13,6 +13,11 @@ Read [PLAN.md](PLAN.md): current stage and checkboxes.
 - Commit only when the user agrees. Commit messages in English, imperative mood.
 - GitHub: public repo https://github.com/danielweissth-cell/Spectrum (`origin`, branch `main`). Push after each
   agreed commit. The repo is public: never commit keys, passwords or signing files.
+- Android release signing key: `~/.android-keys/spectrum-release.jks`, its passwords in
+  `~/.android-keys/spectrum-key.properties` (copy it to `android/key.properties`, git-ignored). Losing the key means
+  published APKs can never be updated in place: keep a backup outside this Mac.
+- APK for users: GitHub Releases (`gh release create vX.Y.Z build/app/outputs/flutter-apk/app-release.apk#Spectrum-X.Y.Z.apk`),
+  never committed to the repo.
 - Do not do more than asked.
 
 ## 3. Architecture
